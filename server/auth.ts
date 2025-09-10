@@ -8,7 +8,7 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'devsecret';
 
 router.post('/signup', (req, res) => {
-  const { email, password, invitationCode, app_language, first_name, last_name, birthdate, username, interests, notifications } = req.body;
+  const { email, password, invitationCode, app_language, first_name, last_name, birthdate, username, interests, notifications, notify_interests, notify_daily, daily_schedule } = req.body;
   if (!email || !password || !invitationCode) {
     return res.status(400).json({ error: 'Missing fields' });
   }
@@ -18,8 +18,23 @@ router.post('/signup', (req, res) => {
   if (existing) return res.status(400).json({ error: 'Email already registered' });
   const hash = bcrypt.hashSync(password, 10);
   const token = uuidv4();
-  const stmt = db.prepare('INSERT INTO users (email, password_hash, level, app_language, first_name, last_name, birthdate, username, interests, notifications, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-  const info = stmt.run(email, hash, code.level, app_language || 'en', first_name || '', last_name || '', birthdate || '', username || '', JSON.stringify(interests || []), notifications ? 1 : 0, token);
+  const stmt = db.prepare('INSERT INTO users (email, password_hash, level, app_language, first_name, last_name, birthdate, username, interests, notifications, notify_interests, notify_daily, daily_schedule, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  const info = stmt.run(
+    email,
+    hash,
+    code.level,
+    app_language || 'en',
+    first_name || '',
+    last_name || '',
+    birthdate || '',
+    username || '',
+    JSON.stringify(interests || []),
+    notifications ? 1 : 0,
+    notify_interests ? 1 : 0,
+    notify_daily ? 1 : 0,
+    daily_schedule ? JSON.stringify(daily_schedule) : null,
+    token
+  );
   res.json({ id: info.lastInsertRowid, verificationToken: token });
 });
 
@@ -49,7 +64,7 @@ export function requireAuth(req: express.Request, res: express.Response, next: e
     const payload = jwt.verify(token, JWT_SECRET) as any;
     (req as any).userId = payload.userId;
     next();
-  } catch (err) {
+  } catch {
     return res.status(401).json({ error: 'Invalid token' });
   }
 }

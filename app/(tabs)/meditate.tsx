@@ -8,7 +8,7 @@ import {
   Switch,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Play, Settings, ChevronDown, ChevronUp } from "lucide-react-native";
+import { Play, ChevronDown, ChevronUp } from "lucide-react-native";
 import { useMeditationApp } from "@/hooks/meditation-app-context";
 
 export default function MeditateScreen() {

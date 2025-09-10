@@ -44,8 +44,48 @@ app.post('/api/uploads', upload.single('clip'), (req, res) => {
 
 app.get('/api/me', requireAuth, (req, res) => {
   const id = (req as any).userId as number;
-  const user = db.prepare('SELECT id, email, level, app_language, first_name, last_name, birthdate, username, interests, notifications FROM users WHERE id=?').get(id);
+  const row = db
+    .prepare('SELECT id, email, level, app_language, first_name, last_name, birthdate, username, interests, notifications, notify_interests, notify_daily, daily_schedule FROM users WHERE id=?')
+    .get(id) as any;
+  const user = {
+    ...row,
+    interests: row?.interests ? JSON.parse(row.interests) : [],
+    daily_schedule: row?.daily_schedule ? JSON.parse(row.daily_schedule) : null,
+  };
   res.json(user);
+});
+
+app.put('/api/me', requireAuth, (req, res) => {
+  const id = (req as any).userId as number;
+  const {
+    app_language,
+    first_name,
+    last_name,
+    birthdate,
+    username,
+    interests,
+    notifications,
+    notify_interests,
+    notify_daily,
+    daily_schedule,
+  } = req.body;
+  const stmt = db.prepare(
+    'UPDATE users SET app_language=?, first_name=?, last_name=?, birthdate=?, username=?, interests=?, notifications=?, notify_interests=?, notify_daily=?, daily_schedule=? WHERE id=?'
+  );
+  stmt.run(
+    app_language || null,
+    first_name || null,
+    last_name || null,
+    birthdate || null,
+    username || null,
+    JSON.stringify(interests || []),
+    notifications ? 1 : 0,
+    notify_interests ? 1 : 0,
+    notify_daily ? 1 : 0,
+    daily_schedule ? JSON.stringify(daily_schedule) : null,
+    id
+  );
+  res.json({ success: true });
 });
 
 app.get('/api/uploads/:id', (req, res) => {
@@ -69,6 +109,11 @@ app.post('/api/meditations', requireAuth, (req, res) => {
 app.get('/api/categories', (req, res) => {
   const categories = db.prepare('SELECT * FROM categories').all();
   res.json(categories);
+});
+
+app.get('/api/tags', (req, res) => {
+  const tags = db.prepare('SELECT * FROM tags').all();
+  res.json(tags);
 });
 
 app.post('/api/categories', (req, res) => {

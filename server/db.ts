@@ -50,6 +50,11 @@ CREATE TABLE IF NOT EXISTS invitation_codes (
   level INTEGER NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS tags (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT UNIQUE NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT UNIQUE NOT NULL,
@@ -62,6 +67,9 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT,
   interests TEXT,
   notifications INTEGER DEFAULT 0,
+  notify_interests INTEGER DEFAULT 0,
+  notify_daily INTEGER DEFAULT 0,
+  daily_schedule TEXT,
   is_verified INTEGER DEFAULT 0,
   verification_token TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -91,6 +99,16 @@ if (existing.count === 0) {
     for (const c of cats) insert.run(c.name, c.color, c.level_required);
   });
   insertMany(defaultCategories);
+}
+
+const defaultTags = ['Relaxation', 'Focus', 'Sleep', 'Energy', 'Stress Relief'];
+const tagCount = db.prepare('SELECT COUNT(*) as count FROM tags').get() as {count:number};
+if (tagCount.count === 0) {
+  const insertTag = db.prepare('INSERT INTO tags (name) VALUES (?)');
+  const insertTags = db.transaction((tags: string[]) => {
+    for (const t of tags) insertTag.run(t);
+  });
+  insertTags(defaultTags);
 }
 
 const defaultInvites = [
