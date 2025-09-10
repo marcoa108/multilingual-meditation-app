@@ -5,9 +5,11 @@ import path from 'path';
 import db from './db';
 import { enqueueJob, startJobWorker } from './jobProcessor';
 import { v4 as uuidv4 } from 'uuid';
+import authRouter, { requireAuth } from './auth';
 
 const app = express();
 app.use(express.json());
+app.use('/api/auth', authRouter);
 
 const tempDir = path.join(__dirname, 'temp');
 if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
@@ -36,6 +38,12 @@ app.post('/api/uploads', upload.single('clip'), (req, res) => {
   const uploadId = result.lastInsertRowid as number;
   const jobId = enqueueJob(uploadId);
   res.json({ uploadId, jobId });
+});
+
+app.get('/api/me', requireAuth, (req, res) => {
+  const id = (req as any).userId as number;
+  const user = db.prepare('SELECT id, email, level, app_language, first_name, last_name, birthdate, username, interests, notifications FROM users WHERE id=?').get(id);
+  res.json(user);
 });
 
 app.get('/api/uploads/:id', (req, res) => {

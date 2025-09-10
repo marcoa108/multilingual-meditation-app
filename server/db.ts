@@ -33,6 +33,28 @@ CREATE TABLE IF NOT EXISTS processing_jobs (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(upload_id) REFERENCES clip_uploads(id)
 );
+
+CREATE TABLE IF NOT EXISTS invitation_codes (
+  code TEXT PRIMARY KEY,
+  level INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  level INTEGER NOT NULL,
+  app_language TEXT,
+  first_name TEXT,
+  last_name TEXT,
+  birthdate TEXT,
+  username TEXT,
+  interests TEXT,
+  notifications INTEGER DEFAULT 0,
+  is_verified INTEGER DEFAULT 0,
+  verification_token TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 `;
 
 db.exec(createTables);
@@ -58,6 +80,22 @@ if (existing.count === 0) {
     for (const c of cats) insert.run(c.name, c.color, c.level_required);
   });
   insertMany(defaultCategories);
+}
+
+const defaultInvites = [
+  { code: 'BEGINNER', level: 1 },
+  { code: 'BASIC', level: 3 },
+  { code: 'INTERMEDIATE', level: 5 },
+  { code: 'ADVANCED', level: 7 }
+];
+
+const inviteCount = db.prepare('SELECT COUNT(*) as count FROM invitation_codes').get() as {count:number};
+if (inviteCount.count === 0) {
+  const insertInv = db.prepare('INSERT INTO invitation_codes (code, level) VALUES (?, ?)');
+  const insertInvMany = db.transaction((rows: typeof defaultInvites) => {
+    for (const r of rows) insertInv.run(r.code, r.level);
+  });
+  insertInvMany(defaultInvites);
 }
 
 export default db;
