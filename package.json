@@ -6,7 +6,7 @@
     "start": "bunx rork start -p dmwo2zeebzrszgzz5th6w --tunnel",
     "start-web": "bunx rork start -p dmwo2zeebzrszgzz5th6w --web --tunnel",
     "start-web-dev": "DEBUG=expo* bunx rork start -p dmwo2zeebzrszgzz5th6w --web --tunnel",
-    "lint": "expo lint",
+    "lint": "eslint .",
     "server": "tsx server/index.ts"
   },
   "dependencies": {
