@@ -48,6 +48,12 @@ async function handleJob(job: Job) {
   const duration = Math.round(metadata.format.duration || 0);
   db.prepare('UPDATE clip_uploads SET duration=? WHERE id=?').run(duration, job.upload_id);
 
+  db.prepare(`
+    INSERT INTO clips (upload_id, language, level, voice, duration, type)
+    VALUES (?, ?, 1, 'default', ?, 'generic')
+    ON CONFLICT(upload_id) DO UPDATE SET duration=excluded.duration, language=excluded.language
+  `).run(job.upload_id, upload.language || 'unknown', duration);
+
   // placeholder for transcription and categorization
   const vttPath = filePath.replace(/\.[^/.]+$/, '.vtt');
   if (!fs.existsSync(path.dirname(vttPath))) fs.mkdirSync(path.dirname(vttPath), { recursive: true });

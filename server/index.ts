@@ -6,10 +6,12 @@ import db from './db';
 import { enqueueJob, startJobWorker } from './jobProcessor';
 import { v4 as uuidv4 } from 'uuid';
 import authRouter, { requireAuth } from './auth';
+import { generateMeditation } from './meditation';
 
 const app = express();
 app.use(express.json());
 app.use('/api/auth', authRouter);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const tempDir = path.join(__dirname, 'temp');
 if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
@@ -52,6 +54,16 @@ app.get('/api/uploads/:id', (req, res) => {
   if (!upload) return res.status(404).json({ error: 'Not found' });
   const job = db.prepare('SELECT * FROM processing_jobs WHERE upload_id=? ORDER BY id DESC LIMIT 1').get(id);
   res.json({ upload, job });
+});
+
+app.post('/api/meditations', requireAuth, (req, res) => {
+  const { duration, language, level } = req.body;
+  try {
+    const result = generateMeditation({ duration, language, level });
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 app.get('/api/categories', (req, res) => {

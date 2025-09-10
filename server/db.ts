@@ -34,6 +34,17 @@ CREATE TABLE IF NOT EXISTS processing_jobs (
   FOREIGN KEY(upload_id) REFERENCES clip_uploads(id)
 );
 
+CREATE TABLE IF NOT EXISTS clips (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  upload_id INTEGER UNIQUE NOT NULL,
+  language TEXT NOT NULL,
+  level INTEGER NOT NULL,
+  voice TEXT,
+  duration INTEGER NOT NULL,
+  type TEXT,
+  FOREIGN KEY(upload_id) REFERENCES clip_uploads(id)
+);
+
 CREATE TABLE IF NOT EXISTS invitation_codes (
   code TEXT PRIMARY KEY,
   level INTEGER NOT NULL
