@@ -32,3 +32,8 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# server generated files
+server/uploads/
+server/temp/
+server/data/
