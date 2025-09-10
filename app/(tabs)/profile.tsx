@@ -8,7 +8,7 @@ import {
   Switch,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Settings, Globe, User, Bell, Download, LogOut } from "lucide-react-native";
+import { Settings, User, Bell, Download, LogOut } from "lucide-react-native";
 import { useMeditationApp } from "@/hooks/meditation-app-context";
 
 export default function ProfileScreen() {
